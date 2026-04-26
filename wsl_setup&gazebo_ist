@@ -14,6 +14,12 @@ wsl --install
 wsl -l -v         # states the name, state and version
 wsl              # to run the Windows Linux
 username: deeptirekha_hansdah + password: hansdah@DRH#348
+echo $DISPLAY   # output is :0 (GUI ready -> for Gazebo)   # test ex: sudo apt install x11-apps -y
+                                                                      xclock    # in-built clock gui
+sudo apt install -y python3 python3-pip python3-venv git   # basic dev tools (needed later)
+note: Windows
+      └── WSL Ubuntu (Linux environment)  ✓✓ done  # this is where -> gazebo,ardupilot,simulation will run
+
 
 # powershell commands
 python -m venv drone_env
