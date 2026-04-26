@@ -8,6 +8,12 @@ WSL Ubuntu
     ├── dronekit
     ├── pymavlink
     └── your code
+ _______________________________________
+| WSL (Ubuntu 22/24):                   |
+|   ArduPilot SITL  ←→  Gazebo (gz)     |        # Note1: not PX4 Ardupilot SITL        # Note2: PX4 can't work with Mission Planner, therefore use Ardupilot SITL
+| Windows:                              |
+|   Mission Planner (connects via UDP)  |
+|_______________________________________|
 
 # install wsl (windows linux) in powershell (as administrator)
 wsl --install
@@ -20,9 +26,10 @@ echo $DISPLAY   # output is :0 (GUI ready -> for Gazebo)   # test ex: sudo apt i
 sudo apt install -y python3 python3-pip python3-venv git   # basic dev tools (needed later)
 note: Windows
       └── WSL Ubuntu (Linux environment)  ✓✓ done  # this is where -> gazebo,ardupilot,simulation will run
-# powershell commands for gazebo installation
+# powershell commands for installing 20.04 vers. (stable for gazebo)
 wsl --install -d Ubuntu-20.04   # vers. (focal)
 # wsl/ubuntu commands
+ ㄨ(for gazebo-gazebo11 installation)
 sudo apt update && sudo apt upgrade -y
 sudo apt update
 sudo apt install -y curl gnupg lsb-release
@@ -31,6 +38,10 @@ echo "deb [signed-by=/usr/share/keyrings/gazebo-archive-keyring.gpg] http://pack
 sudo apt update
 sudo apt install gazebo11
 gazebo        # to run the gazebo simulator
+ ✓(for gazebo-gz vers. installation)
+
+   (for ardupilot SITL installation)        
+
 
 # powershell commands
 python -m venv drone_env
