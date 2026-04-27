@@ -38,7 +38,27 @@ echo "deb [signed-by=/usr/share/keyrings/gazebo-archive-keyring.gpg] http://pack
 sudo apt update
 sudo apt install gazebo11
 gazebo        # to run the gazebo simulator
- ✓(for gazebo-gz vers. installation)
+  ✓(for gazebo-gz vers. installation)
+sudo apt update
+sudo apt install -y lsb-release wget gnupg
+sudo wget https://packages.osrfoundation.org/gazebo.gpg \
+-O /usr/share/keyrings/gazebo-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/gazebo-archive-keyring.gpg] \
+http://packages.osrfoundation.org/gazebo/ubuntu-stable \
+$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list
+sudo apt update
+sudo apt install -y gz-harmonic
+   (for ardupilot-gazebo plugin installation)
+cd ~
+git clone https://github.com/ArduPilot/ardupilot_gazebo.git
+cd ardupilot_gazebo
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
+echo 'export GZ_SIM_SYSTEM_PLUGIN_PATH=$HOME/ardupilot_gazebo/build' >> ~/.bashrc
+echo 'export GZ_SIM_RESOURCE_PATH=$HOME/ardupilot_gazebo/models' >> ~/.bashrc
+source ~/.bashrc
 
    (for ardupilot SITL installation)     
 cd ~
