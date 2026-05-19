@@ -1,4 +1,4 @@
-WSL Ubuntu
+Ubuntu
 │
 ├── Gazebo (global)
 ├── ArduPilot (global)
@@ -9,7 +9,7 @@ WSL Ubuntu
     ├── pymavlink
     └── your code
  _______________________________________
-| WSL (Ubuntu 22/24):                   |
+| Ubuntu 24.04 (noble):                 |
 |   ArduPilot SITL  ←→  Gazebo (gz)     |      # Note1: not PX4 Ardupilot SITL      # Note2: PX4 can't work with Mission Planner, therefore use Ardupilot SITL
 | Windows:                              |
 |   Mission Planner (connects via UDP)  |
