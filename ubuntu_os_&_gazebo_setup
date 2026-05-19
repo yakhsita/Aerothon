@@ -41,8 +41,21 @@ cd ~/ardupilot
 cd ~/ardupilot/ArduCopter
 sim_vehicle.py -v ArduCopter --console --map
      
-
-
+    #ardupilot gz pluggin
+cd ~
+git clone https://github.com/ArduPilot/ardupilot_gazebo
+cd ardupilot_gazebo
+sudo apt install cmake g++ python3-jinja2 ninja-build protobuf-compiler libprotobuf-dev -y      #installing dependencies
+mkdir build
+cd build
+; denpendencies for normal linux robotics like: uav research
+; sudo apt install rapidjson-dev -y
+; sudo apt install libopencv-dev -y
+; sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev -y
+cmake .. -G Ninja
+ninja
+source ~/.bashrc
+gz sim -v4 ~/ardupilot_gazebo/worlds/iris_runway.sdf     #world with runway iris copter and rest is seen in gazebo sim
 
 
 
