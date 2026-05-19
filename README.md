@@ -18,6 +18,13 @@ Drone
       1. ArduPilot SITL
         ✅ already done by you
       2. Gazebo world
+             --------------------------------------------
+            |          Gazebo (physics world)            |
+            |                   ⇅                        |
+            |  ArduPilot SITL (flight controller brain)  |
+            |                   ⇅                        |
+            |           MAVLink communication            |
+             --------------------------------------------
         Next:
           launch Gazebo
           spawn drone
