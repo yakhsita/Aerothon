@@ -1,0 +1,5 @@
+  # Terminal 1
+gz sim -v4 ~/ardupilot_gazebo/worlds/iris_runway.sdf            (play + click runway and follow)
+  # Terminal 2
+cd ~/ardupilot/ArduCopter
+sim_vehicle.py -v ArduCopter -f JSON --console --map
