@@ -54,8 +54,14 @@ cd build
 ; sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev -y
 cmake .. -G Ninja
 ninja
+cd ~/ardupilot_gazebo/build
 source ~/.bashrc
 gz sim -v4 ~/ardupilot_gazebo/worlds/iris_runway.sdf     #world with runway iris copter and rest is seen in gazebo sim
+
+    #Connect SITL to Gazebo
+cd ~/ardupilot/ArduCopter
+sim_vehicle.py -v ArduCopter -f gazebo-iris --console --map
+
 
 
 
