@@ -27,3 +27,9 @@ GUIDED> takeoff 5      # 5m up the altitude
            no sideways shift
            stay at 5m altitude
 
+      # waypoint commands
+      GUIDED> wp clear     #to clear all the waypoints
+      GUIDED> wp add       #and then click on the point a, add then b, add thn c
+      GUIDED> mode auto    #after "wp add", this makes it move autonomously to that waypoint
+      GUIDED> mode rtl     #rtl - return to home, returns to home
+
