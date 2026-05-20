@@ -1,1 +1,11 @@
+SO FAR...                                          NEXT ADD...
+ ________________                                   ____________________
+|    Gazebo      |                                 |   Gazebo Camera    |
+|      ↕         |                                 |        ↓           |
+| ArduPilot SITL |                                 |  OpenCV Python     |
+|      ↕         |                                 |        ↓           |
+|   MAVProxy     |                                 |  Detection Logic   |
+| ______________ |                                 |        ↓           |
+                                                   |  MAVLink Commands  |
+                                                   | __________________ |
 
