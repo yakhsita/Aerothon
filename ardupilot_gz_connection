@@ -1,4 +1,6 @@
-  # Terminal 1
+WORKING STABLE SETUP
+
+# Terminal 1
 gz sim -v4 ~/ardupilot_gazebo/worlds/iris_runway.sdf            (play + click iris_with_gimbal and follow)     #if u get "link 1 down" in console, meaning u didn't play/run the simulation
   # Terminal 2
 cd ~/ardupilot/ArduCopter
