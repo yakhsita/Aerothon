@@ -1,0 +1,4 @@
+IMPORTANT:
+run this EVERY new terminal session unless later added to .bashrc
+
+export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/yakhsita-hansdah
