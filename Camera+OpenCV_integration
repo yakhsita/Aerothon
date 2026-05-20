@@ -17,7 +17,7 @@ SO FAR...                                          NEXT ADD...
     PHASE 2
     (OpenCV detection)
        Examples:
-             QR
-             ArUco
-             colored target
-             object
+            - QR
+            - ArUco
+            - colored target
+            - object
