@@ -10,3 +10,20 @@ sim_vehicle.py -v ArduCopter -f JSON --console --map
 param set FRAME_CLASS 1
 param set FRAME_TYPE 0
 
+# In MAVProxy
+STABiLIZE> mode guided
+STABiLIZE> mode
+GUIDED> GUIDED     #shows automatically
+GUIDED> arm throttle
+GUIDED> takeoff 5      # 5m up the altitude
+
+      # velocity commands
+      GUIDED> guided X Y Z
+            X = forward/back
+            Y = left/right
+            Z = altitude
+  Ex: GUIDED> guided 10 0 5
+  meaning: move 10m forward
+           no sideways shift
+           stay at 5m altitude
+
