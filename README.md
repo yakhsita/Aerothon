@@ -25,10 +25,10 @@ Drone
             |                   ⇅                        |
             |           MAVLink communication            |
              --------------------------------------------
-        Next:
-          launch Gazebo
-          spawn drone
-          make drone move
+        ✅ Next:
+              launch Gazebo
+              spawn drone
+              make drone move
       3. MAVLink communication
          Understand:
           how ArduPilot talks
