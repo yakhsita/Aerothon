@@ -96,6 +96,10 @@ Drone
 
 
 
+NOTES: 1) MAVProxy = manual command interface
+
+
+
 
 
 
