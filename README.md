@@ -102,6 +102,12 @@ NOTES: 1) MAVProxy = manual command interface
                 - takeoff
                 - wp                # waypoint navigation
                 - mode auto         # autonomous flying
+ _____________________________________________________
+|           Type            |         Behavior        |
+| ------------------------- | ----------------------- |
+| Velocity control          | keeps moving forever    |
+| Position/waypoint control | goes to point and stops |
+ _____________________________________________________
 
 
 
