@@ -9,3 +9,15 @@ SO FAR...                                          NEXT ADD...
                                                    |  MAVLink Commands  |
                                                    | __________________ |
 
+    PHASE 1
+    (Camera feed from Gazebo)
+       Goal: access drone camera in Python
+           
+
+    PHASE 2
+    (OpenCV detection)
+       Examples:
+             QR
+             ArUco
+             colored target
+             object
