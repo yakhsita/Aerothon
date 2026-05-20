@@ -97,6 +97,11 @@ Drone
 
 
 NOTES: 1) MAVProxy = manual command interface
+            we hv commands like:
+                - guided
+                - takeoff
+                - wp                # waypoint navigation
+                - mode auto         # autonomous flying
 
 
 
