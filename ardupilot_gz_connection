@@ -3,3 +3,7 @@ gz sim -v4 ~/ardupilot_gazebo/worlds/iris_runway.sdf            (play + click ir
   # Terminal 2
 cd ~/ardupilot/ArduCopter
 sim_vehicle.py -v ArduCopter -f JSON --console --map
+
+    # AFTER THE CONSOLE OPENS, UNDER STABILIZE>
+param set FRAME_CLASS 1
+param set FRAME_TYPE 0
