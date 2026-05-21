@@ -9,28 +9,3 @@ sim_vehicle.py -v ArduCopter -f JSON --console --map
     # AFTER THE CONSOLE OPENS, UNDER STABILIZE>             (only in the start necessary)
 param set FRAME_CLASS 1
 param set FRAME_TYPE 0
-
-# In MAVProxy
-STABiLIZE> mode guided
-STABiLIZE> mode
-GUIDED> GUIDED     #shows automatically
-GUIDED> arm throttle
-GUIDED> takeoff 5      # 5m up the altitude
-
-      # velocity commands
-      GUIDED> guided X Y Z
-            X = forward/back
-            Y = left/right
-            Z = altitude
-  Ex: GUIDED> guided 10 0 5
-  meaning: move 10m forward
-           no sideways shift
-           stay at 5m altitude
-
-      # waypoint commands
-      GUIDED> wp clear     #to clear all the waypoints
-      GUIDED> wp add       #and then click on the point a, add then b, add thn c
-      GUIDED> wp list      #shows all the waypoints that we hv made
-      GUIDED> mode auto    #after "wp add", this makes it move autonomously to that waypoint
-      GUIDED> mode rtl     #rtl - return to home, returns to home
-
