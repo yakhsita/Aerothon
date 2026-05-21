@@ -1,8 +1,7 @@
-import cv2
-from pyzbar.pyzbar import decode
+import qrcode
 
-img = cv2.imread("/home/yakhsita-hansdah/qr_marker/materials/textures/qr.png")
+img = qrcode.make("TARGET_FOUND")
 
-qr = decode(img)
+img.save("/home/yakhsita-hansdah/qr_marker/materials/textures/qr.png")
 
-print(qr)
+exit()
