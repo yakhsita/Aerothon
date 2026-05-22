@@ -22,22 +22,26 @@ moving = False
 
 # ---------------- ARM + TAKEOFF ----------------
 def arm_and_takeoff(altitude):
+    print("Setting GUIDED mode...")
     master.set_mode_apm("GUIDED")
-    print(master.flightmode)
+    time.sleep(2)
+    print("Arming motors...")
     master.arducopter_arm()
-    print("Arming...")
-    time.sleep(5)
-    print("Taking off...")
+    master.motors_armed_wait()
+    print("Motors armed!")
+    time.sleep(3)
+    print(f"Taking off to {altitude} meters")
     master.mav.command_long_send(
         master.target_system,
         master.target_component,
         mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
         0,
-        0,0,0,0,
-        0,0,
+        0, 0, 0, 0,
+        0, 0,
         altitude
     )
     time.sleep(15)
+    print("Takeoff complete")
 
 # ---------------- GOTO FUNCTION ----------------
 def goto_position(x, y, z):
