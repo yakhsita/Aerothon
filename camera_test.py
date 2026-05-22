@@ -1,3 +1,5 @@
+# only testing camera code(decodes qr too), goto multi_qr_nav.py 
+
 from gz.transport13 import Node
 import cv2
 import numpy as np
