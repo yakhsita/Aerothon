@@ -108,7 +108,7 @@ def callback(msg):
                 target_x = float(coords[0])
                 target_y = float(coords[1])
                 moving = True
-                goto_position(target_x, target_y, 5)
+                goto_position(target_x, target_y, 4)
                 print("Travelling...")
                 time.sleep(15)
                 moving = False
@@ -122,10 +122,8 @@ def callback(msg):
 node.subscribe(Image, topic, callback)
 
 # ---------------- START MISSION ----------------
-arm_and_takeoff(2)
+arm_and_takeoff(4)
 print("Mission Started")
-time.sleep(5)                                   # only for testing (1)
-goto_position(3, 0, 5)                          # (2)
 
 while True:
     pass
