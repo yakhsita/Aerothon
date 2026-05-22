@@ -21,3 +21,6 @@ GUIDED> takeoff 5      # 5m up the altitude
       GUIDED> wp list      #shows all the waypoints that we hv made
       GUIDED> mode auto    #after "wp add", this makes it move autonomously to that waypoint
       GUIDED> mode rtl     #rtl - return to home, returns to home
+
+# to connect .py file thru mavlink use
+> output add 127.0.0.1:14550
