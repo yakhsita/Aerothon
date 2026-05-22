@@ -19,6 +19,7 @@ topic = "/world/iris_runway/model/iris_with_gimbal/model/gimbal/link/pitch_link/
 node = Node()
 visited = set()
 moving = False
+mission_ready = False
 
 # ---------------- ARM + TAKEOFF ----------------
 def arm_and_takeoff(altitude):
@@ -42,6 +43,10 @@ def arm_and_takeoff(altitude):
     )
     time.sleep(15)
     print("Takeoff complete")
+    
+    global mission_ready
+    mission_ready = True
+    print("Mission Ready")
 
 # ---------------- GOTO FUNCTION ----------------
 def goto_position(x, y, z):
@@ -67,15 +72,18 @@ def land():
 
 # ---------------- CAMERA CALLBACK ----------------
 def callback(msg):
-
     global visited
     global moving
+    global mission_ready
+    
+    if not mission_ready:
+        return
+    if moving:
+        return
+        
     img = np.frombuffer(msg.data, dtype=np.uint8)
     frame = img.reshape((msg.height, msg.width, 3)).copy()
     qr_codes = decode(frame)
-
-    if moving:
-        return
 
     for qr in qr_codes:
         x, y, w, h = qr.rect
@@ -114,21 +122,13 @@ def callback(msg):
 node.subscribe(Image, topic, callback)
 
 # ---------------- START MISSION ----------------
-arm_and_takeoff(5)
+arm_and_takeoff(2)
 print("Mission Started")
 time.sleep(5)                                   # only for testing (1)
 goto_position(3, 0, 5)                          # (2)
 
 while True:
     pass
-
-
-
-
-
-
-
-
 
 
 
