@@ -18,6 +18,7 @@ print("Connected to drone")
 topic = "/world/iris_runway/model/iris_with_gimbal/model/gimbal/link/pitch_link/sensor/camera/image"
 node = Node()
 visited = set()
+moving = False
 
 # ---------------- ARM + TAKEOFF ----------------
 def arm_and_takeoff(altitude):
@@ -64,9 +65,13 @@ def land():
 def callback(msg):
 
     global visited
+    global moving
     img = np.frombuffer(msg.data, dtype=np.uint8)
     frame = img.reshape((msg.height, msg.width, 3)).copy()
     qr_codes = decode(frame)
+
+    if moving:
+        return
 
     for qr in qr_codes:
         x, y, w, h = qr.rect
@@ -90,7 +95,12 @@ def callback(msg):
                 coords = text.split(",")
                 target_x = float(coords[0])
                 target_y = float(coords[1])
-                goto_position(target_x, target_y)
+                moving = True
+                goto_position(target_x, target_y, 5)
+                print("Travelling...")
+                time.sleep(15)
+                moving = False
+                print("Ready for next QR")
             except:
                 print("Invalid QR format")
     cv2.imshow("Drone Camera", frame)
