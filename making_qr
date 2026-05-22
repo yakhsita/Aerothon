@@ -1,7 +1,17 @@
+python3
 >> import qrcode
+
 >> img = qrcode.make("TARGET_FOUND")
->> img.save("/home/yakhsita-hansdah/qr_marker/materials/textures/qr.png")
+>> img.save("/home/yakhsita-hansdah/qr_marker/materials/textures/qr.png")                # demo qr 
+
+>> qrcode.make("11,23").save("/home/yakhsita-hansdah/qr1/materials/textures/qr.png")     # QR1 tells drone where QR2 is
+>> qrcode.make("-15,32").save("/home/yakhsita-hansdah/qr2/materials/textures/qr.png")    # QR2 tells drone where QR3 is
+>> qrcode.make("LAND").save("/home/yakhsita-hansdah/qr3/materials/textures/qr.png")      # Final QR
+
 >> exit()
+
+#also exporting changes accordingly
+export GZ_SIM_RESOURCE_PATH=$HOME/qr1:$HOME/qr2:$HOME/qr3:$HOME/ardupilot_gazebo/models
 
 
 # Change the ⬇️(QRCode1 to whatever suitable) in the material file (nano ~/qr3/materials/scripts/qr.material)
