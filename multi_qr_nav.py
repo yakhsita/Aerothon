@@ -1,4 +1,4 @@
-# present working code
+# doesn't work good either, goto claude_nav.py
 
 from gz.transport13 import Node
 import cv2
