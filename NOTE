@@ -2,3 +2,8 @@ IMPORTANT:
 run this EVERY new terminal session unless later added to .bashrc
 
 export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/yakhsita-hansdah
+
+IMPORTANT:
+run this to move the gimbal towards the ground
+
+gz topic -t /gimbal/cmd_pitch -m gz.msgs.Double -p "data: 1.57"
