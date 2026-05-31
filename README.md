@@ -93,11 +93,12 @@ Drone
     Even simulation is enough initially.
     
   PHASE 5 — REPORT WRITING
+  
     (NOW the report becomes easy.)
 
 
 
-NOTES: 1) MAVProxy = manual command interface
+NOTES: 1. MAVProxy = manual command interface
             we hv commands like:
                 - guided
                 - takeoff
