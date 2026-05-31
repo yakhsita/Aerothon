@@ -98,7 +98,7 @@ Drone
 
 
 
-NOTES: 1. MAVProxy = manual command interface
+NOTES: 1) MAVProxy = manual command interface
             we hv commands like:
                 - guided
                 - takeoff
