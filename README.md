@@ -1,5 +1,5 @@
 The Project Baseline:
-
+```
 Drone
 │
 ├── Flight control (ArduPilot)
@@ -9,6 +9,7 @@ Drone
 ├── Navigation
 ├── Payload system
 └── Mission logic
+```
     
   PHASE 1 — Build Simulation Foundation
     (This is where you are RIGHT NOW.)
