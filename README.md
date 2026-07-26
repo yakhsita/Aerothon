@@ -111,6 +111,20 @@ NOTES: 1) MAVProxy = manual command interface
 | Position/waypoint control | goes to point and stops |
  _____________________________________________________
 
+ 2) State machine for gimbal
+_____________________________________________________________________________
+| Drone State             | Gimbal Angle       | Purpose                     |
+| ----------------------- | ------------------ | --------------------------- |
+| Startup                 | Forward            | Verify environment          |
+| Takeoff                 | Forward (20° down) | Stable ascent               |
+| At mission altitude     | 90° down           | Search ground QR            |
+| Flying to waypoint      | 90° down           | Keep looking for next QR    |
+| Green corridor detected | 45° forward-down   | See entrance and path ahead |
+| Inside corridor         | 45° forward-down   | Watch obstacles + corridor  |
+| Delivery QR             | 90° down           | Read delivery QR            |
+| Return Home             | Forward            | Fly back                    |
+| Landing                 | 90° down           | Observe landing spot        |
+_____________________________________________________________________________
 
 
 
