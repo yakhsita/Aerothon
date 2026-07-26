@@ -11,6 +11,35 @@ from pyzbar.pyzbar import decode
 from pymavlink import mavutil
 import time
 import threading
+import subprocess
+import queue
+
+# ---------------- GIMBAL MODES ----------------
+GIMBAL_FORWARD = 0.0      # Looking ahead
+GIMBAL_CORRIDOR = 0.8     # ~45° downward
+GIMBAL_DOWN = 1.57        # Straight down (QR scanning)
+
+# ---------------- GIMBAL MOVEMENT ----------------
+def set_gimbal(angle):
+    subprocess.run([
+        "gz", "topic",
+        "-t", "/gimbal/cmd_pitch",
+        "-m", "gz.msgs.Double",
+        "-p", f"data: {angle}"
+    ])
+
+def set_gimbal_mode(mode):
+    if mode == "FORWARD":
+        set_gimbal(GIMBAL_FORWARD)
+
+    elif mode == "CORRIDOR":
+        set_gimbal(GIMBAL_CORRIDOR)
+
+    elif mode == "DOWN":
+        set_gimbal(GIMBAL_DOWN)
+
+    else:
+        raise ValueError(f"Unknown gimbal mode: {mode}")
 
 # ---------------- MAVLINK CONNECTION ----------------
 master = mavutil.mavlink_connection('udp:127.0.0.1:14550')
@@ -30,7 +59,41 @@ landing     = False
 # Drone's Gazebo world position at arm time (update if drone doesn't start at origin)
 home_gz_x = 0.0
 home_gz_y = 0.0
-FLIGHT_ALTITUDE = 4.0   # metres
+FLIGHT_ALTITUDE = 2.0   # metres
+
+# Two separate queues
+raw_queue      = queue.Queue(maxsize=2)   # callback  → QR worker
+display_queue  = queue.Queue(maxsize=2)   # QR worker → main thread
+
+mav_msgs       = {}
+mav_msgs_lock  = threading.Lock()
+
+# ---------------- MAVLINK READER THREAD ----------------
+def mavlink_reader():
+    """
+    Continuously reads ALL mavlink messages into mav_msgs dict.
+    Nothing else calls recv_match — only this thread does.
+    """
+    while True:
+        msg = master.recv_match(blocking=True, timeout=1)
+        if msg is None:
+            continue
+        msg_type = msg.get_type()
+        with mav_msgs_lock:
+            mav_msgs[msg_type] = msg
+
+threading.Thread(target=mavlink_reader, daemon=True).start()
+
+def get_msg(msg_type, timeout=5):
+    """Poll mav_msgs dict instead of blocking recv_match."""
+    start = time.time()
+    while time.time() - start < timeout:
+        with mav_msgs_lock:
+            msg = mav_msgs.get(msg_type)
+        if msg:
+            return msg
+        time.sleep(0.05)
+    return None
 
 # ---------------- COORDINATE CONVERSION ----------------
 def gazebo_to_ned(gz_x, gz_y, altitude):
@@ -49,6 +112,8 @@ def gazebo_to_ned(gz_x, gz_y, altitude):
 # ---------------- ARM + TAKEOFF ----------------
 def arm_and_takeoff(altitude):
     global mission_ready
+
+    print("Mission Started")
 
     print("Setting GUIDED mode...")
     master.set_mode_apm("GUIDED")
@@ -83,11 +148,15 @@ def arm_and_takeoff(altitude):
         time.sleep(0.5)
 
     print("Takeoff complete — Mission Ready")
+    time.sleep(2)
+    set_gimbal_mode("DOWN")
+    time.sleep(3)
     mission_ready = True
 
 # ---------------- GOTO ----------------
 def goto_position(ned_x, ned_y, ned_z):
     print(f"  Sending NED target → X={ned_x:.2f}  Y={ned_y:.2f}  Z={ned_z:.2f}")
+    set_gimbal_mode("FORWARD")
     master.mav.set_position_target_local_ned_send(
         0,
         master.target_system,
@@ -116,9 +185,11 @@ def wait_until_reached(ned_x, ned_y, tolerance=1.0, timeout=40):
             print(f"  Distance to target: {dist:.2f} m")
             if dist <= tolerance:
                 print("  Target reached!")
+                time.sleep(1)
+                set_gimbal_mode("DOWN")
+                time.sleep(1)
                 return True
         time.sleep(0.5)
-
     print("  Timeout — continuing anyway")
     return False
 
@@ -129,62 +200,86 @@ def land():
     print("Landing command sent.")
     master.set_mode_apm("LAND")
 
-# ---------------- CAMERA CALLBACK ----------------
+# ---------------- CALLBACK — ULTRA LIGHTWEIGHT ----------------
+# Only job: copy raw bytes and drop into raw_queue
+# No decode, no numpy reshape, no QR — nothing heavy
 def callback(msg):
+    try:
+        raw_queue.put_nowait((msg.data, msg.width, msg.height))
+    except queue.Full:
+        pass   # drop frame, never block gz transport thread
+
+# ---------------- QR WORKER THREAD ----------------
+# Does all the heavy work: reshape, QR decode, draw, navigate
+def qr_worker():
     global visited, moving, mission_ready, landing
 
-    if not mission_ready or moving or landing:
-        return
-
-    # Decode image
-    img   = np.frombuffer(msg.data, dtype=np.uint8)
-    frame = img.reshape((msg.height, msg.width, 3)).copy()
-
-    qr_codes = decode(frame)
-
-    for qr in qr_codes:
-        x, y, w, h = qr.rect
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        text = qr.data.decode("utf-8")
-        cv2.putText(frame, text, (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-        if text in visited:
+    while True:
+        try:
+            data, width, height = raw_queue.get(timeout=0.5)
+        except queue.Empty:
             continue
 
-        print(f"QR Detected: {text}")
-        visited.add(text)
-
-        # ---------- LAND ----------
-        if text.strip().upper() == "LAND":
-            land()
-            return
-
-        # ---------- COORDINATE ----------
+        # Reshape here, off the callback thread
         try:
-            parts    = text.split(",")
-            gz_x     = float(parts[0].strip())
-            gz_y     = float(parts[1].strip())
-
-            ned_x, ned_y, ned_z = gazebo_to_ned(gz_x, gz_y, FLIGHT_ALTITUDE)
-            print(f"Gazebo ({gz_x}, {gz_y})  →  NED ({ned_x:.2f}, {ned_y:.2f}, {ned_z:.2f})")
-
-            # Run navigation in a separate thread so camera keeps processing
-            def navigate():
-                global moving
-                moving = True
-                goto_position(ned_x, ned_y, ned_z)
-                wait_until_reached(ned_x, ned_y)
-                moving = False
-                print("Ready for next QR\n")
-
-            threading.Thread(target=navigate, daemon=True).start()
-
+            img   = np.frombuffer(data, dtype=np.uint8)
+            frame = img.reshape((height, width, 3)).copy()
         except Exception as e:
-            print(f"  Invalid QR format — {e}")
+            print(f"Reshape error: {e}")
+            continue
 
-    cv2.imshow("Drone Camera", frame)
-    cv2.waitKey(1)
+        # QR decode only when mission active
+        if mission_ready and not moving and not landing:
+            try:
+                qr_codes = decode(frame)
+                for qr in qr_codes:
+                    x, y, w, h = qr.rect
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    text = qr.data.decode("utf-8")
+                    cv2.putText(frame, text, (x, y-10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+                    if text in visited:
+                        continue
+
+                    print(f"QR Detected: {text}")
+                    visited.add(text)
+
+                    if text.strip().upper() == "LAND":
+                        land()
+                        break
+
+                    try:
+                        parts = text.split(",")
+                        gz_x  = float(parts[0].strip())
+                        gz_y  = float(parts[1].strip())
+
+                        ned_x, ned_y, ned_z = gazebo_to_ned(gz_x, gz_y, FLIGHT_ALTITUDE)
+                        print(f"Gazebo ({gz_x}, {gz_y}) → NED ({ned_x:.2f}, {ned_y:.2f}, {ned_z:.2f})")
+
+                        def navigate(nx=ned_x, ny=ned_y, nz=ned_z):
+                            global moving
+                            moving = True
+                            goto_position(nx, ny, nz)
+                            wait_until_reached(nx, ny)
+                            moving = False
+                            print("Ready for next QR\n")
+
+                        threading.Thread(target=navigate, daemon=True).start()
+
+                    except Exception as e:
+                        print(f"  Invalid QR format: {e}")
+
+            except Exception as e:
+                print(f"QR decode error: {e}")
+
+        # Send annotated frame to display queue
+        try:
+            display_queue.put_nowait(frame)
+        except queue.Full:
+            pass
+
+threading.Thread(target=qr_worker, daemon=True).start()
 
 # ---------------- DEBUG: print drone NED position once ----------------
 def print_home_ned():
@@ -196,15 +291,35 @@ def print_home_ned():
 
 # ---------------- MAIN ----------------
 print_home_ned()                         # sanity check before takeoff
-
 node.subscribe(Image, topic, callback)   # start camera subscription
 
-arm_and_takeoff(FLIGHT_ALTITUDE)         # arm → takeoff → set mission_ready
+cv2.namedWindow("Drone Camera", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Drone Camera", 640, 480)
+
+# Run takeoff in background so main thread stays free for display
+takeoff_thread = threading.Thread(target=arm_and_takeoff, args=(FLIGHT_ALTITUDE,), daemon=True)
+takeoff_thread.start()
 
 print("Mission Started — scanning for QR codes...\n")
 
-while True:
-    pass
+# Main thread handles ALL display — no freezing
+try:
+    while True:
+        try:
+            frame = display_queue.get(timeout=0.1)
+            cv2.imshow("Drone Camera", frame)
+        except queue.Empty:
+            pass
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            print("Q pressed — landing...")
+            land()
+            break
 
+except KeyboardInterrupt:
+    print("Interrupted — landing...")
+    land()
 
-
+finally:
+    cv2.destroyAllWindows()
+    print("Done.")
