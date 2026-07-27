@@ -47,13 +47,22 @@ Drone
     Goal:IF this happens
           → do next step
 
-    Example: Takeoff
-            → scan QR
-            → identify target
-            → move
-            → drop payload
-            → return
-            → land
+    Current Goal: 
+            Mission Manager
+            │
+            ├── Flight Controller (MAVLink)
+            ├── Vision Manager
+            │   ├── QR Detection
+            │   ├── Corridor Detection
+            │   ├── Banner Detection
+            │   └── Red Zone Detection
+            ├── Gimbal Manager
+            ├── Navigation Manager
+            ├── Safety Manager
+            │   ├── Geofence
+            │   ├── RTL
+            │   └── LiDAR Avoidance
+            └── Payload Manager
 
     That is called:
       FSM (Finite State Machine)
@@ -112,19 +121,6 @@ NOTES: 1) MAVProxy = manual command interface
  _____________________________________________________
 
  2) State machine for gimbal
-_____________________________________________________________________________
-| Drone State             | Gimbal Angle       | Purpose                     |
-| ----------------------- | ------------------ | --------------------------- |
-| Startup                 | Forward            | Verify environment          |
-| Takeoff                 | Forward (20° down) | Stable ascent               |
-| At mission altitude     | 90° down           | Search ground QR            |
-| Flying to waypoint      | 90° down           | Keep looking for next QR    |
-| Green corridor detected | 45° forward-down   | See entrance and path ahead |
-| Inside corridor         | 45° forward-down   | Watch obstacles + corridor  |
-| Delivery QR             | 90° down           | Read delivery QR            |
-| Return Home             | Forward            | Fly back                    |
-| Landing                 | 90° down           | Observe landing spot        |
-_____________________________________________________________________________
 
 
 
