@@ -96,8 +96,7 @@ Drone
     
   PHASE 5 — REPORT WRITING
   
-    (NOW the report becomes easy.)
-
+       https://docs.google.com/document/d/1T9HJExvlILe7wq2aILxlRqLJgfOgMIOHqeEDX1SC7wY/edit?usp=drivesdk
 
 
 ## NOTES: 
