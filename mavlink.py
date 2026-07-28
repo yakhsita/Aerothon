@@ -1,4 +1,5 @@
 # ignore afnaan gui code
+# needa review later
 """
 Flight Controller GUI - MAVLink/Mission Planner Interface
 Connects via MAVLink protocol (same as Mission Planner) to send
