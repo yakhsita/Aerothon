@@ -223,9 +223,10 @@ def arm_and_takeoff(altitude):
         msg.y,
         msg.z
     ) #store it for return mission
-    
+    print_home_ned()
     print("Takeoff complete — Mission Ready")
     change_state(MissionState.SCAN_START_QR)
+    print("Scanning start QR...")
 
 # ---------------- GOTO ----------------
 def goto_position(ned_x, ned_y, ned_z):
@@ -452,33 +453,18 @@ def qr_worker():
                         continue
 
                     print(f"QR Detected: {text}")
-                    visited.add(text)
+                    visited.add(text.strip())
 
                     if text.strip().upper() == "LAND":
                         land()
                         break
 
                     try:
-                        parts = text.split(",")
-                        gz_x  = float(parts[0].strip())
-                        gz_y  = float(parts[1].strip())
-
-                        ned_x, ned_y, ned_z = gazebo_to_ned(gz_x, gz_y, CRUISE_ALTITUDE)
-                        print(f"Gazebo ({gz_x}, {gz_y}) → NED ({ned_x:.2f}, {ned_y:.2f}, {ned_z:.2f})")
-
-                        def navigate(nx=ned_x, ny=ned_y, nz=ned_z):
-                            global moving
-                            moving = True
-                            goto_position(nx, ny, nz)
-                            wait_until_reached(nx, ny)
-                            moving = False
-                            print("Ready for next QR\n")
-
-                        target_delivery = (ned_x, ned_y)
+                        target_delivery = text.strip().upper()
+                        print(f"Target Delivery: {target_delivery}")
                         change_state(MissionState.FIND_GREEN_BANNER)
-                        print(f"Stored destination: {current_target}")
-                        print("Searching for corridor...")
-
+                        print("Searching for GREEN banner...")
+                        
                     except Exception as e:
                         print(f"  Invalid QR format: {e}")
 
@@ -493,59 +479,42 @@ def qr_worker():
 
 threading.Thread(target=qr_worker, daemon=True).start()
 
-# ---------------- DEBUG: print drone NED position once ----------------
+# ------------ DEBUG: print drone NED position once ------------
 def print_home_ned():
-    msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=True, timeout=5)
+    global home_position
+    msg = get_msg("LOCAL_POSITION_NED")
     if msg:
-        print(f"[DEBUG] Drone NED at arm time: x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}")
+        home_position = (msg.x, msg.y, msg.z)
+        print(f"[HOME] x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}")
     else:
-        print("[DEBUG] Could not read LOCAL_POSITION_NED")
+        print("[HOME] Could not read LOCAL_POSITION_NED")
 
 # ---------------- MAIN ----------------
-print_home_ned()                         # sanity check before takeoff
+print("Starting camera...")
 node.subscribe(Image, topic, callback)   # start camera subscription
 
 cv2.namedWindow("Drone Camera", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Drone Camera", 640, 480)
 
 # Run takeoff in background so main thread stays free for display
+print("Starting autonomous mission...")
 takeoff_thread = threading.Thread(target=arm_and_takeoff, args=(CRUISE_ALTITUDE,), daemon=True)
 takeoff_thread.start()
-
-print("Mission Started — scanning for QR codes...\n")
+print("Autonomous mission initialized.")
 
 # Main thread handles ALL display — no freezing
 try:
     while True:
+    
         try:
             frame = display_queue.get(timeout=0.1)
             cv2.imshow("Drone Camera", frame)
+            
         except queue.Empty:
             pass
+            
         key = cv2.waitKey(1) & 0xFF
-        
-        # ---------------- MISSION LOGIC ----------------
-        if mission_state == MISSION_FIND_CORRIDOR:
-            if detect_corridor():
-                print("Green corridor detected!")
-                mission_state = MISSION_FLY_CORRIDOR
-        elif mission_state == MISSION_FLY_CORRIDOR:
-            print("Flying through corridor...")
-            time.sleep(3)
-            print("Exited corridor.")
-            mission_state = MISSION_NAVIGATE
-        elif mission_state == MISSION_NAVIGATE:
-            if current_target is not None and not moving:
-                x, y, z = current_target
-                moving = True
-                print("Navigating to stored destination...")
-                goto_position(x, y, z)
-                wait_until_reached(x, y)
-                moving = False
-                current_target = None
-                mission_state = MISSION_SCAN_QR
-                print("Waiting for next QR...")
-                
+
         if key == ord('q'):
             print("Q pressed — landing...")
             land()
