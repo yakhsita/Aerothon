@@ -14,12 +14,10 @@ Drone
 
 ## 5 Phases
   PHASE 1 — Build Simulation Foundation
-    (This is where you are RIGHT NOW.)
     
     Goal: Make a drone exist in simulation and fly properly.
     Tasks
       1. ArduPilot SITL
-        ✅ already done by you
       2. Gazebo world
              --------------------------------------------
             |          Gazebo (physics world)            |
@@ -28,7 +26,7 @@ Drone
             |                   ⇅                        |
             |           MAVLink communication            |
              --------------------------------------------
-        ✅ Next:
+        Next:
               launch Gazebo
               spawn drone
               make drone move
@@ -56,7 +54,7 @@ Drone
             ├── Vision Manager
             │   ├── QR Detection
             │   ├── Corridor Detection
-            │   ├── Banner Detection
+            │   ├── Banner Detection    (Here i am ✅)
             │   └── Red Zone Detection
             ├── Gimbal Manager
             ├── Navigation Manager
@@ -73,13 +71,6 @@ Drone
 
   PHASE 3 — COMPUTER VISION
   (ONLY after drone simulation works.)
-
-    Start SIMPLE
-    DO NOT jump to:
-        YOLOv9
-        TensorRT
-        DBSCAN
-        ROS2 distributed pipelines
         
     You first need: camera feed → detect something
 
@@ -92,8 +83,8 @@ Drone
 
     Only later:
         YOLO
-        TensorRT
-        optimization
+        TensorRT optimization
+        ROS2 distributed pipelines
   
   PHASE 4 — PAYLOAD SYSTEM
     (Start VERY simple.)
