@@ -1,3 +1,5 @@
+# this is the waypoint logic which is diff from the aerorthon rules so go to the mission.py
+
 # ============================================================
 #   QR-based Drone Navigation — Gazebo + ArduPilot SITL
 #   Fixes: axis remapping, NED origin offset, position check
