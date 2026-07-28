@@ -1,4 +1,5 @@
-The Project Baseline:
+# SEAINDIA_AEROTHON AUTONOMOUS MISSION LOGIC
+## The Project Baseline:
 ```
 Drone
 │
@@ -10,7 +11,8 @@ Drone
 ├── Payload system
 └── Mission logic
 ```
-    
+
+## 5 Phases
   PHASE 1 — Build Simulation Foundation
     (This is where you are RIGHT NOW.)
     
@@ -107,12 +109,13 @@ Drone
 
 
 
-NOTES: 1) MAVProxy = manual command interface
-            we hv commands like:
-                - guided
-                - takeoff
-                - wp                # waypoint navigation
-                - mode auto         # autonomous flying
+## NOTES: 
+          1) MAVProxy = manual command interface
+                we hv commands like:
+                    - guided
+                    - takeoff
+                    - wp                # waypoint navigation
+                    - mode auto         # autonomous flying
  _____________________________________________________
 |           Type            |         Behavior        |
 | ------------------------- | ----------------------- |
