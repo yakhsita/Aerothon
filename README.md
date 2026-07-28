@@ -120,7 +120,6 @@ NOTES: 1) MAVProxy = manual command interface
 | Position/waypoint control | goes to point and stops |
  _____________________________________________________
 
- 2) State machine for gimbal
 
 
 
