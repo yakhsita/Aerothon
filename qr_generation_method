@@ -1,3 +1,9 @@
+# Things u need to do yourself, - make the qr.config & qr.sdf file in the qr folder (copy both of the file contents from other qr files)
+                                - make the empty model & materials folder in the qr folder
+                                - make the scripts & texture folder in the materials folder
+                                - in the scripts folder, make a file named qr.material (copy contents from other qr files)
+                                - leave the textures file as it is, the qr generated will go there
+
 python3
 >> import qrcode
 
