@@ -25,10 +25,39 @@ print("Connected to drone")
 topic = "/world/iris_runway/model/iris_with_gimbal/model/gimbal/link/pitch_link/sensor/camera/image"
 node = Node()
 
+# MISSION STATES ----------------
+MISSION_TAKEOFF = 0
+MISSION_SCAN_QR = 1
+MISSION_FIND_CORRIDOR = 2
+MISSION_FLY_CORRIDOR = 3
+MISSION_NAVIGATE = 4
+MISSION_DELIVER = 5
+MISSION_RTL = 6
+MISSION_LAND = 7
+MISSION_COMPLETE = 8
+MISSION_EMERGENCY = 9
+
+mission_state = MISSION_TAKEOFF
+
+class MissionState(Enum):
+    TAKEOFF = 0
+    SCAN_START_QR = 1
+    FIND_GREEN_BANNER = 2
+    ALIGN_CORRIDOR = 3
+    FOLLOW_CORRIDOR = 4
+    GO_TO_DELIVERY_ZONE = 5
+    SEARCH_TARGET_QR = 6
+    PAYLOAD_DROP = 7
+    RETURN_TO_CORRIDOR = 8
+    FOLLOW_RETURN_CORRIDOR = 9
+    RETURN_HOME = 10
+    LAND = 11
+    COMPLETE = 12
+
 # Mission ------------
+current_state = MissionState.TAKEOFF
 payload_dropped = False
 target_delivery = None
-current_state = MissionState.TAKEOFF
 home_altitude = None
 
 # Navigation -----------
@@ -66,35 +95,6 @@ display_queue  = queue.Queue(maxsize=2)   # QR worker → main thread
 
 mav_msgs       = {}
 mav_msgs_lock  = threading.Lock()
-
-# MISSION STATES ----------------
-MISSION_TAKEOFF = 0
-MISSION_SCAN_QR = 1
-MISSION_FIND_CORRIDOR = 2
-MISSION_FLY_CORRIDOR = 3
-MISSION_NAVIGATE = 4
-MISSION_DELIVER = 5
-MISSION_RTL = 6
-MISSION_LAND = 7
-MISSION_COMPLETE = 8
-MISSION_EMERGENCY = 9
-
-mission_state = MISSION_TAKEOFF
-
-class MissionState(Enum):
-    TAKEOFF = 0
-    SCAN_START_QR = 1
-    FIND_GREEN_BANNER = 2
-    ALIGN_CORRIDOR = 3
-    FOLLOW_CORRIDOR = 4
-    GO_TO_DELIVERY_ZONE = 5
-    SEARCH_TARGET_QR = 6
-    PAYLOAD_DROP = 7
-    RETURN_TO_CORRIDOR = 8
-    FOLLOW_RETURN_CORRIDOR = 9
-    RETURN_HOME = 10
-    LAND = 11
-    COMPLETE = 12
 
 # GIMBAL STATES ----------------
 current_gimbal = None
@@ -140,11 +140,6 @@ def set_gimbal(angle):
         "-p", f"data: {angle}"
     ])
 
-def change_state(new_state):
-    global current_state
-    current_state = new_state
-    update_gimbal()
-
 def update_gimbal():
     global current_gimbal
 
@@ -152,13 +147,14 @@ def update_gimbal():
         MissionState.SCAN_START_QR,
         MissionState.GO_TO_DELIVERY_ZONE,
         MissionState.SEARCH_TARGET_QR,
-        MissionState.PAYLOAD,
+        MissionState.PAYLOAD_DROP,
         MissionState.RETURN_HOME,
     ):
         desired = GIMBAL_DOWN
 
     elif current_state in (
-        MissionState.FIND_BANNER,
+        MissionState.LAND,
+        MissionState.FIND_GREEN_BANNER,
         MissionState.ALIGN_CORRIDOR,
         MissionState.FOLLOW_CORRIDOR,
         MissionState.RETURN_TO_CORRIDOR,
@@ -172,6 +168,11 @@ def update_gimbal():
     if desired != current_gimbal:
         set_gimbal(desired)
         current_gimbal = desired
+
+def change_state(new_state):
+    global current_state
+    current_state = new_state
+    update_gimbal()
         
 # --------- CORRIDOR DETECTION (follow b/w the banners) --------
 def detect_corridor():
@@ -187,13 +188,13 @@ def arm_and_takeoff(altitude):
 
     print("Setting GUIDED mode...")
     master.set_mode_apm("GUIDED")
-    time.sleep(2)
+    time.sleep(0.5)
 
     print("Arming motors...")
     master.arducopter_arm()
     master.motors_armed_wait()
     print("Motors armed!")
-    time.sleep(3)
+    time.sleep(4)
 
     print(f"Taking off to {altitude} m ...")
     master.mav.command_long_send(
