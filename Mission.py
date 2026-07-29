@@ -133,12 +133,18 @@ def gazebo_to_ned(gz_x, gz_y, altitude):
 
 # ---------------- GIMBAL ----------------
 def set_gimbal(angle):
-    subprocess.run([
-        "gz", "topic",
-        "-t", "/gimbal/cmd_pitch",
-        "-m", "gz.msgs.Double",
-        "-p", f"data: {angle}"
-    ])
+    for _ in range(3):
+        subprocess.run(
+            [
+                "gz", "topic",
+                "-t", "/gimbal/cmd_pitch",
+                "-m", "gz.msgs.Double",
+                "-p", f"data: {angle}"
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        time.sleep(0.05)
 
 def update_gimbal():
     global current_gimbal
@@ -168,10 +174,12 @@ def update_gimbal():
     if desired != current_gimbal:
         set_gimbal(desired)
         current_gimbal = desired
+        print("Current Gimbal mode: ",current_gimbal) 
 
 def change_state(new_state):
     global current_state
     current_state = new_state
+    print("Current State mode: ",current_state) 
     update_gimbal()
         
 # --------- CORRIDOR DETECTION (follow b/w the banners) --------
@@ -434,7 +442,8 @@ def qr_worker():
             frame = img.reshape((height, width, 3)).copy()
             frame, corridor_found, offset = detect_corridor(frame)
             if corridor_found:
-                print(f"Corridor Offset = {offset}")
+                # print(f"Corridor Offset = {offset}")
+                pass
         except Exception as e:
             print(f"Reshape error: {e}")
             continue
@@ -442,14 +451,15 @@ def qr_worker():
         # QR decode only when mission active
         if current_state == MissionState.SCAN_START_QR:
             try:
-                qr_codes = decode(frame)
+                gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+                qr_codes = decode(gray)
                 for qr in qr_codes:
                     x, y, w, h = qr.rect
                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                     text = qr.data.decode("utf-8")
                     cv2.putText(frame, text, (x, y-10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
+                    print(f"QR size ={w}x{h}")
                     if text in visited:
                         continue
 
