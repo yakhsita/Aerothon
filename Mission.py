@@ -1,6 +1,6 @@
 # ============================================================
 #         AEROTHON FULL MISSION LOGIC NAVIGATION
-#   Fixes: change code acc. to aerothon track-1 rulebook
+#   Fixes: follow corridor done, next-up LIDARRRRRRRRRR!!!!
 # ============================================================
 
 from gz.transport13 import Node
@@ -75,6 +75,14 @@ corridor_detected = False
 corridor_aligned = False
 corridor_completed = False
 corridor_last_seen = 0
+
+FORWARD_STEP = 0.30      # metres
+SIDE_STEP = 0.15         # metres
+OFFSET_TOLERANCE = 20    # pixels
+
+latest_offset = 0
+latest_corridor_found = False
+
 
 # WORLD CONFIGURATIONS ------------ Drone's Gazebo world position at arm time (update if drone doesn't start at origin)
 home_gz_x = 0.0
@@ -274,6 +282,60 @@ def land():
     print("Landing command sent.")
     master.set_mode_apm("LAND")
     
+# ----- DRONE MOVEMENT: FORWARD & RIGHT (WHILE MOVING IN CORRIDOR) -----
+def move_relative(forward=0.0, right=0.0):
+
+    msg = get_msg("LOCAL_POSITION_NED")
+
+    if msg is None:
+        print("LOCAL_POSITION_NED unavailable")
+        return False
+
+    target_x = msg.x + forward
+    target_y = msg.y + right
+    target_z = -CRUISE_ALTITUDE
+
+    goto_position(target_x, target_y, target_z)
+
+    return wait_until_reached(target_x, target_y)
+    
+# ---- DRONE ALIGNMENT: RIGHT & LEFT (WHILE MOVING IN CORRIDOR) -----
+    
+def align_corridor(offset):
+    if offset > OFFSET_TOLERANCE:
+        print("Corridor is to the RIGHT")
+        move_relative(right=SIDE_STEP)
+    elif offset < -OFFSET_TOLERANCE:
+        print("Corridor is to the LEFT")
+        move_relative(right=-SIDE_STEP)
+    else:
+        print("Corridor aligned!")
+        change_state(MissionState.FOLLOW_CORRIDOR)
+    
+corridor_lost_count = 0
+
+def follow_corridor(found, offset):
+    global corridor_lost_count
+    if not found:
+        corridor_lost_count += 1
+        print(f"Corridor Lost ({corridor_lost_count})")
+        if corridor_lost_count >= 10:
+            print("Exited corridor!")
+            change_state(MissionState.GO_TO_DELIVERY_ZONE)
+        return
+    corridor_lost_count = 0
+    if offset > OFFSET_TOLERANCE:
+        print("Correcting Right")
+        move_relative(forward=FORWARD_STEP,
+                      right=SIDE_STEP)
+    elif offset < -OFFSET_TOLERANCE:
+        print("Correcting Left")
+        move_relative(forward=FORWARD_STEP,
+                      right=-SIDE_STEP)
+    else:
+        print("Flying Forward")
+        move_relative(forward=FORWARD_STEP)
+    
 # ---------------- CORRIDOR DETECTION ----------------
 def detect_corridor(frame):
 
@@ -291,47 +353,54 @@ def detect_corridor(frame):
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
+    
+    height, width = mask.shape
+    
+    left_mask = mask[:, :width//2]
+    right_mask = mask[:, width//2:]
+    
     # Find contours
-    contours, _ = cv2.findContours(
-        mask,
+    left_contours, _ = cv2.findContours(
+        left_mask,
         cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE
     )
 
-    walls = []
+    right_contours, _ = cv2.findContours(
+        right_mask,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
 
-    # Keep only large contours
-    for cnt in contours:
+    left_wall = None
+    right_wall = None
+    
+    # Finding the biggest Contour in each parts
+    if left_contours:
+        left_wall = max(left_contours, key=cv2.contourArea)
+        if cv2.contourArea(left_wall) < 800:
+            left_wall = None
 
-        area = cv2.contourArea(cnt)
+    if right_contours:
+        right_wall = max(right_contours, key=cv2.contourArea)
+        if cv2.contourArea(right_wall) < 800:
+            right_wall = None
 
-        if area > 800:
-            walls.append(cnt)
-
-    # Need at least two walls
-    if len(walls) < 2:
+    if left_wall is None or right_wall is None:
 
         cv2.putText(
             frame,
             "Corridor Not Found",
-            (20, 40),
+            (20,40),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
-            (0, 0, 255),
+            (0,0,255),
             2
         )
 
-        return frame, False, None
-
-    # Sort walls from left to right
-    walls = sorted(
-        walls,
-        key=lambda c: cv2.boundingRect(c)[0]
-    )
-
-    left_wall = walls[0]
-    right_wall = walls[1]
+        return frame, False, 0
+        
+    right_wall = right_wall + np.array([[[width//2, 0]]])
 
     # Bounding boxes
     x1, y1, w1, h1 = cv2.boundingRect(left_wall)
@@ -417,7 +486,9 @@ def detect_corridor(frame):
         (255, 255, 255),
         2
     )
-    return frame, True, offset
+    print(f"Offset = {offset}")
+    print(f"Left area = {cv2.contourArea(left_wall):.0f}, Right area = {cv2.contourArea(right_wall):.0f}")
+    return frame, True, offset          
 
 # ---------------- CALLBACK — ULTRA LIGHTWEIGHT ----------------
 # Only job: copy raw bytes and drop into raw_queue
@@ -431,6 +502,7 @@ def callback(msg):
 # ---------------- QR WORKER THREAD ----------------
 # Does all the heavy work: reshape, QR decode, draw, navigate
 def qr_worker():
+    global latest_offset, latest_corridor_found
     while True:
         try:
             data, width, height = raw_queue.get(timeout=0.5)
@@ -441,9 +513,11 @@ def qr_worker():
             img   = np.frombuffer(data, dtype=np.uint8)
             frame = img.reshape((height, width, 3)).copy()
             frame, corridor_found, offset = detect_corridor(frame)
+            # Store the latest camera information
+            latest_corridor_found = corridor_found
+            latest_offset = offset
             if corridor_found:
-                # print(f"Corridor Offset = {offset}")
-                pass
+                print(f"Corridor Offset = {offset}")
         except Exception as e:
             print(f"Reshape error: {e}")
             continue
@@ -520,7 +594,15 @@ try:
         try:
             frame = display_queue.get(timeout=0.1)
             cv2.imshow("Drone Camera", frame)
-            
+            if current_state == MissionState.FIND_GREEN_BANNER:
+                if latest_corridor_found:
+                    print("Green corridor detected!")
+                    change_state(MissionState.ALIGN_CORRIDOR)
+            elif current_state == MissionState.ALIGN_CORRIDOR:
+                align_corridor(latest_offset)
+            elif current_state == MissionState.FOLLOW_CORRIDOR:
+                follow_corridor(latest_corridor_found,
+                                latest_offset)
         except queue.Empty:
             pass
             
