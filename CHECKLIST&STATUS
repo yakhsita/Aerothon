@@ -1,0 +1,37 @@
+✓ Takeoff
+✓ Gimbal control
+✓ Scan first QR
+✓ Save target delivery
+✓ Green corridor detection
+✓ Align with corridor
+✓ Fly through corridor
+
+⬜ LiDAR obstacle avoidance
+⬜ Reach delivery zone
+⬜ Search correct QR
+⬜ Payload drop
+⬜ Return to corridor
+⬜ Return home
+⬜ Land
+
+             ███████████████
+             PROJECT STATUS
+             ███████████████
+
+Takeoff                ██████████ 100%
+
+Gimbal                 ██████████ 100%
+
+QR Detection           ██████████ 100%
+
+Mission States         ██████████ 100%
+
+Green Corridor         █████████░ 95%
+
+LiDAR                  ░░░░░░░░░░   0%
+
+Delivery Search        ░░░░░░░░░░   0%
+
+Payload                ░░░░░░░░░░   0%
+
+Return Mission         ░░░░░░░░░░   0%
