@@ -2,13 +2,22 @@ IMPORTANT:
 run this EVERY new terminal session unless later added to .bashrc
 export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/yakhsita-hansdah
 
-run this to add u models in the Resource Spawner              NOTE: to open the resource spawner, click 3-dots on the right corner
+# HOW TO USE FEW HIDDEN GZ SIM FEATURES 
+1) run this to add u models in the Resource Spawner              NOTE: to open the resource spawner, click 3-dots on the right corner
 export GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models
 NOTE: don't put the path of the folder where ur model.config & model.sdf file are
         instead put the path of the folder where ur model folder is in.
   ex: GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models
                                 not
       GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models/lidar_model
+if it doesn't work, try this 
+echo $GZ_SIM_RESOURCE_PATH    #to see if ur path is saved, if not do the prev step
+pkill -f gz                   #kill sitch for all background simulation
+pkill -f ruby
+then use this command
+gz sim -v 4 empty.sdf        (note: v & 4 has a space in between)
+
+2) for seeing the lidar rays, click 3-dots in the top right corner, it has an option called (VISUALIZE LIDAR)
 
 IMPORTANT:
 run this to move the gimbal towards the ground
