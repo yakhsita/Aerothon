@@ -2,6 +2,9 @@ IMPORTANT:
 run this EVERY new terminal session unless later added to .bashrc
 export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/yakhsita-hansdah
 
+run this to add u models in the Resource Spawner              NOTE: to open the resource spawner, click 3-dots on the right corner
+export GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models
+
 IMPORTANT:
 run this to move the gimbal towards the ground
 gz topic -t /gimbal/cmd_pitch -m gz.msgs.Double -p "data: 1.57"
