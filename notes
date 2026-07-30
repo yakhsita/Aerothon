@@ -6,6 +6,9 @@ run this to add u models in the Resource Spawner              NOTE: to open the 
 export GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models
 NOTE: don't put the path of the folder where ur model.config & model.sdf file are
         instead put the path of the folder where ur model folder is in.
+  ex: GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models
+                                not
+      GZ_SIM_RESOURCE_PATH=~/home/yakhsita-hansdah/ardupilot_gazebo/models/lidar_model
 
 IMPORTANT:
 run this to move the gimbal towards the ground
