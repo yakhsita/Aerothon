@@ -5,6 +5,35 @@
       <uri>model://iris_with_standoffs</uri>
     </include>
 
+    <include>
+      <uri>model://gimbal_small_3d</uri>
+      <name>gimbal</name>
+      <pose degrees="true">0 -0.01 -0.124923 90 0 90</pose>    
+    </include>
+    
+    <include>
+        <uri>model://lidar_model</uri>
+        <name>lidar</name>
+        <pose>0 0 0.18 0 0 1.5750</pose>
+    </include>
+
+    <joint name="gimbal_joint" type="revolute">
+      <parent>iris_with_standoffs::base_link</parent>
+      <child>gimbal::base_link</child>
+      <axis>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+        <xyz>0 0 1</xyz>
+      </axis>
+    </joint>
+    
+    <joint name="lidar_joint" type="fixed">
+        <parent>iris_with_standoffs::base_link</parent>
+        <child>lidar::lidar_link</child>
+    </joint>
+
     <!-- plugins -->
     <plugin filename="gz-sim-joint-state-publisher-system"
       name="gz::sim::systems::JointStatePublisher">
@@ -265,7 +294,7 @@
 
       <!-- roll range is -30 to +30 deg -->
       <control channel="8">
-        <jointName>iris_with_standoffs::roll_joint</jointName>
+        <jointName>gimbal::roll_joint</jointName>
         <multiplier>1.047197551196</multiplier>
         <offset>-0.5</offset>
         <servo_min>1100</servo_min>
@@ -277,7 +306,7 @@
 
       <!-- pitch range is -135 to +45 deg -->
       <control channel="9">
-        <jointName>iris_with_standoffs::pitch_joint</jointName>
+        <jointName>gimbal::pitch_joint</jointName>
         <multiplier>-3.14159265</multiplier>
         <offset>-0.75</offset>
         <servo_min>1100</servo_min>
@@ -289,7 +318,7 @@
 
       <!-- yaw range is -160 to +160 deg -->
       <control channel="10">
-        <jointName>iris_with_standoffs::yaw_joint</jointName>
+        <jointName>gimbal::yaw_joint</jointName>
         <multiplier>-5.5850536</multiplier>
         <offset>-0.5</offset>
         <servo_min>1100</servo_min>
@@ -304,21 +333,21 @@
     <plugin
       filename="gz-sim-joint-position-controller-system"
       name="gz::sim::systems::JointPositionController">
-      <joint_name>iris_with_standoffs::roll_joint</joint_name>
+      <joint_name>gimbal::roll_joint</joint_name>
       <topic>/gimbal/cmd_roll</topic>
       <p_gain>2</p_gain>
     </plugin>
     <plugin
       filename="gz-sim-joint-position-controller-system"
       name="gz::sim::systems::JointPositionController">
-      <joint_name>iris_with_standoffs::pitch_joint</joint_name>
+      <joint_name>gimbal::pitch_joint</joint_name>
       <topic>/gimbal/cmd_pitch</topic>
       <p_gain>2</p_gain>
     </plugin>
     <plugin
       filename="gz-sim-joint-position-controller-system"
       name="gz::sim::systems::JointPositionController">
-      <joint_name>iris_with_standoffs::yaw_joint</joint_name>
+      <joint_name>gimbal::yaw_joint</joint_name>
       <topic>/gimbal/cmd_yaw</topic>
       <p_gain>2</p_gain>
     </plugin>
