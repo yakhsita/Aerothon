@@ -232,40 +232,6 @@
         </material>
       </visual>
     </link>
-    <link name="lidar_link">
-      <pose relative_to="base_link">0 0 0.18 0 0 1.5750</pose>
-      <inertial>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.000166667</ixx>
-          <iyy>0.000166667</iyy>
-          <izz>0.000166667</izz>
-        </inertia>
-      </inertial>
-      <collision name="collision">
-        <geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-      </collision>
-      <visual name="visual">
-        <geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-      </visual>
-      <sensor name="gpu_lidar" type="gpu_lidar">
-        <frame_id>lidar_link</frame_id>
-        <update_rate>10</update_rate>
-        <lidar>
-          <scan>
-            <horizontal><samples>640</samples><resolution>1</resolution><min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal>
-            <vertical><samples>1</samples><resolution>1</resolution><min_angle>0</min_angle><max_angle>0</max_angle></vertical>
-          </scan>
-          <range><min>0.15</min><max>12</max><resolution>0.01</resolution></range>
-        </lidar>
-        <always_on>true</always_on>
-        <visualize>true</visualize>
-      </sensor>
-    </link>
-    <joint name="lidar_joint" type="fixed">
-      <parent>base_link</parent>
-      <child>lidar_link</child>
-    </joint>
     <link name='imu_link'>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
