@@ -1,4 +1,4 @@
-# SEAINDIA_AEROTHON AUTONOMOUS FLIGHT MISSION OPERATION - SKYSCAN
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/12cc6dc9-ba84-4c09-bd83-19b88da3d1fb" /># SEAINDIA_AEROTHON AUTONOMOUS FLIGHT MISSION OPERATION - SKYSCAN
 ## The Project Baseline:
 ```
 Drone
@@ -13,7 +13,8 @@ Drone
 ```
 
 ## STATE MACHINE:
-```
+```<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/61ae87ef-759b-4a93-928b-1bb11844c90f" />
+
                                                    TAKEOFF
                                                       │
                                                       ▼
