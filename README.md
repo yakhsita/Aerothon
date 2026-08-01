@@ -14,67 +14,67 @@ Drone
 
 ## STATE MACHINE
 ```
-                                                             TAKEOFF
-                                                                │
-                                                                ▼
-                                                        SCAN_START_QR
-                                                                │
-                                                                ▼
-                                                      FIND_GREEN_BANNER
-                                                                │
-                                                        Corridor Found?
-                                                         │           │
-                                                       No│           │Yes
-                                                         │           ▼
-                                                         └──── ALIGN_CORRIDOR
-                                                                  │
-                                                         Centered on corridor?
-                                                             │            │
-                                                           No│            │Yes
-                                                             │            ▼
-                                                             └── FOLLOW_CORRIDOR
-                                                                       │
-                                                        ┌──────────────┴──────────────┐
-                                                        │                             │
-                                                 Obstacle?                      End of corridor /
-                                                        │                      Delivery zone seen?
-                                                 No     │     Yes                  │
-                                                        │                          ▼
-                                                        ▼                  GO_TO_DELIVERY_ZONE
-                                               Continue following                 │
-                                                        │                         ▼
-                                                        │                 SEARCH_TARGET_QR
-                                                        │                         │
-                                                        │                 Target QR found?
-                                                        │                         │
-                                                        │                         ▼
-                                                        │                  PAYLOAD_DROP
-                                                        │                         │
-                                                        │                         ▼
-                                                        │                RETURN_TO_CORRIDOR
-                                                        │                         │
-                                                        │                         ▼
-                                                        │            FOLLOW_RETURN_CORRIDOR
-                                                        │                         │
-                                                        │                  Home reached?
-                                                        │                         │
-                                                        ▼                         ▼
-                                                  AVOID_OBSTACLE            RETURN_HOME
-                                                        │                         │
-                                                Obstacle cleared?                ▼
-                                                   │          │                 LAND
-                                                 No│          │Yes               │
-                                                   │          ▼                  ▼
-                                                   └── Continue avoiding     COMPLETE
-                                                              │
-                                                              ▼
-                                                    REACQUIRE_CORRIDOR
-                                                              │
-                                                     Corridor visible?
+                                                       TAKEOFF
+                                                          │
+                                                          ▼
+                                                  SCAN_START_QR
+                                                          │
+                                                          ▼
+                                                FIND_GREEN_BANNER
+                                                          │
+                                                  Corridor Found?
+                                                   │           │
+                                                 No│           │Yes
+                                                   │           ▼
+                                                   └──── ALIGN_CORRIDOR
+                                                            │
+                                                   Centered on corridor?
                                                        │            │
                                                      No│            │Yes
                                                        │            ▼
-                                               Search / Rotate   FOLLOW_CORRIDOR
+                                                       └── FOLLOW_CORRIDOR
+                                                                 │
+                                                  ┌──────────────┴──────────────┐
+                                                  │                             │
+                                           Obstacle?                      End of corridor /
+                                                  │                      Delivery zone seen?
+                                           No     │     Yes                  │
+                                                  │                          ▼
+                                                  ▼                  GO_TO_DELIVERY_ZONE
+                                         Continue following                 │
+                                                  │                         ▼
+                                                  │                 SEARCH_TARGET_QR
+                                                  │                         │
+                                                  │                 Target QR found?
+                                                  │                         │
+                                                  │                         ▼
+                                                  │                  PAYLOAD_DROP
+                                                  │                         │
+                                                  │                         ▼
+                                                  │                RETURN_TO_CORRIDOR
+                                                  │                         │
+                                                  │                         ▼
+                                                  │            FOLLOW_RETURN_CORRIDOR
+                                                  │                         │
+                                                  │                  Home reached?
+                                                  │                         │
+                                                  ▼                         ▼
+                                            AVOID_OBSTACLE            RETURN_HOME
+                                                  │                         │
+                                          Obstacle cleared?                ▼
+                                             │          │                 LAND
+                                           No│          │Yes               │
+                                             │          ▼                  ▼
+                                             └── Continue avoiding     COMPLETE
+                                                        │
+                                                        ▼
+                                              REACQUIRE_CORRIDOR
+                                                        │
+                                               Corridor visible?
+                                                 │            │
+                                               No│            │Yes
+                                                 │            ▼
+                                         Search / Rotate   FOLLOW_CORRIDOR
 ```
 
 ## 5 Phases
