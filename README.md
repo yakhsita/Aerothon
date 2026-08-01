@@ -13,7 +13,7 @@ Drone
 ```
 
 ## STATE MACHINE:
-```<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/61ae87ef-759b-4a93-928b-1bb11844c90f" />
+```
 
                                                    TAKEOFF
                                                       │
