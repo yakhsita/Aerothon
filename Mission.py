@@ -1,12 +1,14 @@
 # ============================================================
 #         AEROTHON FULL MISSION LOGIC NAVIGATION
-#   Fixes: follow corridor done, next-up LIDARRRRRRRRRR!!!!
+#   Fixes: change code acc. to aerothon track-1 rulebook
 # ============================================================
 
 from gz.transport13 import Node
+from gz.msgs10.laserscan_pb2 import LaserScan
 import cv2
 import numpy as np
 from gz.msgs10.image_pb2 import Image
+from gz.msgs10.laserscan_pb2 import LaserScan
 from pyzbar.pyzbar import decode
 from pymavlink import mavutil
 import time
@@ -22,7 +24,7 @@ master.wait_heartbeat()
 print("Connected to drone")
 
 # ---------------- GLOBALS ----------------
-topic = "/world/iris_runway/model/iris_with_gimbal/model/gimbal/link/pitch_link/sensor/camera/image"
+topic = "/world/iris_runway/model/iris_with_gimbal_lidar/model/gimbal/link/pitch_link/sensor/camera/image"
 node = Node()
 
 # MISSION STATES ----------------
@@ -83,6 +85,13 @@ OFFSET_TOLERANCE = 20    # pixels
 latest_offset = 0
 latest_corridor_found = False
 
+# LIDAR VALUES ---------------
+latest_scan = None
+front_distance = None
+front_left_distance = None
+front_right_distance = None
+left_distance = None
+right_distance = None
 
 # WORLD CONFIGURATIONS ------------ Drone's Gazebo world position at arm time (update if drone doesn't start at origin)
 home_gz_x = 0.0
@@ -99,6 +108,7 @@ SEARCH_RADIUS = 25           # metres
 
 # Two separate queues
 raw_queue      = queue.Queue(maxsize=2)   # callback  → QR worker
+lidar_queue = queue.Queue(maxsize=1)      # lidar  → Obstacle worker
 display_queue  = queue.Queue(maxsize=2)   # QR worker → main thread
 
 mav_msgs       = {}
@@ -247,7 +257,7 @@ def arm_and_takeoff(altitude):
 
 # ---------------- GOTO ----------------
 def goto_position(ned_x, ned_y, ned_z):
-    print(f"  Sending NED target → X={ned_x:.2f}  Y={ned_y:.2f}  Z={ned_z:.2f}")
+    # print(f"  Sending NED target → X={ned_x:.2f}  Y={ned_y:.2f}  Z={ned_z:.2f}")
     master.mav.set_position_target_local_ned_send(
         0,
         master.target_system,
@@ -262,15 +272,15 @@ def goto_position(ned_x, ned_y, ned_z):
 
 # ---------------- WAIT UNTIL POSITION REACHED ----------------
 def wait_until_reached(ned_x, ned_y, tolerance=1.0, timeout=40):
-    print(f"  Waiting to reach target (tolerance={tolerance} m, timeout={timeout} s)...")
+    # print(f"  Waiting to reach target (tolerance={tolerance} m, timeout={timeout} s)...")
     start = time.time()
     while time.time() - start < timeout:
         msg = get_msg("LOCAL_POSITION_NED")
         if msg:
             dist = ((msg.x - ned_x) ** 2 + (msg.y - ned_y) ** 2) ** 0.5
-            print(f"  Distance to target: {dist:.2f} m")
+            # print(f"  Distance to target: {dist:.2f} m")
             if dist <= tolerance:
-                print("  Target reached!")
+                # print("  Target reached!")
                 return True
         time.sleep(0.5)
     print("  Timeout — continuing anyway")
@@ -310,6 +320,7 @@ def align_corridor(offset):
         move_relative(right=-SIDE_STEP)
     else:
         print("Corridor aligned!")
+        print("Drone Pursuing Forward...")
         change_state(MissionState.FOLLOW_CORRIDOR)
     
 corridor_lost_count = 0
@@ -318,7 +329,7 @@ def follow_corridor(found, offset):
     global corridor_lost_count
     if not found:
         corridor_lost_count += 1
-        print(f"Corridor Lost ({corridor_lost_count})")
+        # print(f"Corridor Lost ({corridor_lost_count})")
         if corridor_lost_count >= 10:
             print("Exited corridor!")
             change_state(MissionState.GO_TO_DELIVERY_ZONE)
@@ -333,7 +344,7 @@ def follow_corridor(found, offset):
         move_relative(forward=FORWARD_STEP,
                       right=-SIDE_STEP)
     else:
-        print("Flying Forward")
+        # print("Flying Forward")
         move_relative(forward=FORWARD_STEP)
     
 # ---------------- CORRIDOR DETECTION ----------------
@@ -486,8 +497,6 @@ def detect_corridor(frame):
         (255, 255, 255),
         2
     )
-    print(f"Offset = {offset}")
-    print(f"Left area = {cv2.contourArea(left_wall):.0f}, Right area = {cv2.contourArea(right_wall):.0f}")
     return frame, True, offset          
 
 # ---------------- CALLBACK — ULTRA LIGHTWEIGHT ----------------
@@ -498,26 +507,86 @@ def callback(msg):
         raw_queue.put_nowait((msg.data, msg.width, msg.height))
     except queue.Full:
         pass   # drop frame, never block gz transport thread
+        
+# ---------------- LIDAR CALLBACK ----------------
+def lidar_callback(msg):
+    global latest_scan
+    latest_scan = msg
+    try:
+        lidar_queue.put_nowait(msg)
+    except queue.Full:
+        pass
+
+# ------------- OBSTACLE WORKER THREAD -------------
+def show(v):
+    return "--" if v is None else f"{v:.2f}"
+
+def process_lidar(scan):
+    global front_distance
+    global front_left_distance
+    global front_right_distance
+    global left_distance
+    global right_distance
+
+    ranges = list(scan.ranges)
+
+    if len(ranges) < 640:
+        return
+        
+    def clean(section):
+        valid = [
+            r for r in section
+            if r > 0.15 and np.isfinite(r)
+        ]
+        if not valid:
+            return None
+        return min(valid)
+        
+    for i in [0, 80, 160, 240, 320, 400, 480, 560]:
+        #print(i, ranges[i])
+        pass
+        
+    front_distance = clean(ranges[140:180])
+    front_left_distance = clean(ranges[220:260])
+    front_right_distance = clean(ranges[60:100])
+    left_distance = clean(ranges[300:380])
+    right_distance = clean(ranges[540:639] + ranges[0:20])
 
 # ---------------- QR WORKER THREAD ----------------
 # Does all the heavy work: reshape, QR decode, draw, navigate
 def qr_worker():
-    global latest_offset, latest_corridor_found
+    global latest_offset, latest_corridor_found, latest_scan
     while True:
         try:
             data, width, height = raw_queue.get(timeout=0.5)
         except queue.Empty:
             continue
+        try:
+            scan = lidar_queue.get_nowait()
+        except queue.Empty:
+            scan = None
+        if scan is not None:
+            print(f"LiDAR received: {len(scan.ranges)} beams")
         # Reshape here, off the callback thread
         try:
             img   = np.frombuffer(data, dtype=np.uint8)
             frame = img.reshape((height, width, 3)).copy()
             frame, corridor_found, offset = detect_corridor(frame)
+            if latest_scan is not None:
+                process_lidar(latest_scan)
+                print( 
+                    f"L:{show(left_distance)}  "
+                    f"FL:{show(front_left_distance)}  "
+                    f"F:{show(front_distance)}  "
+                    f"FR:{show(front_right_distance)}  "
+                    f"R:{show(right_distance)}"
+                )
             # Store the latest camera information
             latest_corridor_found = corridor_found
             latest_offset = offset
             if corridor_found:
-                print(f"Corridor Offset = {offset}")
+                # print(f"Corridor Offset = {offset}")
+                pass
         except Exception as e:
             print(f"Reshape error: {e}")
             continue
@@ -576,7 +645,9 @@ def print_home_ned():
 
 # ---------------- MAIN ----------------
 print("Starting camera...")
+print("Starting LiDAR...")
 node.subscribe(Image, topic, callback)   # start camera subscription
+node.subscribe(LaserScan, "/lidar", lidar_callback)   # start lidar subscription
 
 cv2.namedWindow("Drone Camera", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Drone Camera", 640, 480)
