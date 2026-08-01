@@ -12,7 +12,7 @@ Drone
 └── Mission logic
 ```
 
-## STATE MACHINE
+## STATE MACHINE:
 ```
                                                    TAKEOFF
                                                       │
@@ -77,7 +77,7 @@ Drone
                                      Search / Rotate   FOLLOW_CORRIDOR
 ```
 
-## 5 Phases
+## 5 Phases:
   PHASE 1 — Build Simulation Foundation
     
     Goal: Make a drone exist in simulation and fly properly.
